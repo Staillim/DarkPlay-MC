@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">DarkPlay MC</string>
+
+    <!-- Tabs -->
+    <string name="tab_songs">Songs</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="tab_artists">Artists</string>
+    <string name="tab_albums">Albums</string>
+    <string name="tab_library">Library</string>
+
+    <!-- Actions -->
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_next">Next</string>
+    <string name="action_previous">Previous</string>
+    <string name="action_add_to_queue">Add to queue</string>
+    <string name="action_play_next">Play next</string>
+    <string name="action_add_favorite">Add to favorites</string>
+    <string name="action_remove_favorite">Remove from favorites</string>
+    <string name="action_add_to_playlist">Add to playlist</string>
+    <string name="action_sort">Sort</string>
+    <string name="action_create">Create</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_close">Close</string>
+    <string name="action_new_playlist">New playlist</string>
+    <string name="action_show_queue">View queue</string>
+    <string name="action_clear_queue">Clear queue</string>
+    <string name="action_remove_from_queue">Remove from queue</string>
+    <string name="action_drag">Drag to reorder</string>
+    <string name="action_shuffle">Shuffle</string>
+
+    <!-- Labels -->
+    <string name="label_songs">songs</string>
+    <string name="label_albums">Albums</string>
+    <string name="label_queue">Play queue</string>
+    <string name="label_now_playing">Now playing</string>
+    <string name="label_playlist_name">Playlist name</string>
+
+    <!-- Modes -->
+    <string name="mode_loop">Repeat</string>
+    <string name="mode_list">In order</string>
+    <string name="mode_shuffle">Shuffle</string>
+
+    <!-- Empty states -->
+    <string name="empty_songs">No songs found.\nGrant storage access to see your music files.</string>
+    <string name="empty_playlist">This playlist is empty.</string>
+    <string name="empty_artists">No artists found.</string>
+    <string name="empty_albums">No albums found.</string>
+    <string name="empty_queue">The queue is empty.</string>
+    <string name="no_results">No results found.</string>
+    <string name="no_playlists">You have no playlists yet.</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_new_playlist">New playlist</string>
+    <string name="dialog_add_to_playlist">Add to playlist</string>
+
+    <!-- Search -->
+    <string name="search_songs">Search songs…</string>
+</resources>

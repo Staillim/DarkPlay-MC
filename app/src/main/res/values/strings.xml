@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">DarkPlay MC</string>
+
+    <!-- Tabs -->
+    <string name="tab_songs">Canciones</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="tab_artists">Artistas</string>
+    <string name="tab_albums">Álbumes</string>
+    <string name="tab_library">Biblioteca</string>
+
+    <!-- Actions -->
+    <string name="action_play">Reproducir</string>
+    <string name="action_pause">Pausar</string>
+    <string name="action_next">Siguiente</string>
+    <string name="action_previous">Anterior</string>
+    <string name="action_add_to_queue">Agregar a la cola</string>
+    <string name="action_play_next">Reproducir a continuación</string>
+    <string name="action_add_favorite">Agregar a favoritos</string>
+    <string name="action_remove_favorite">Quitar de favoritos</string>
+    <string name="action_add_to_playlist">Agregar a playlist</string>
+    <string name="action_sort">Ordenar</string>
+    <string name="action_create">Crear</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_new_playlist">Nueva playlist</string>
+    <string name="action_show_queue">Ver cola</string>
+    <string name="action_clear_queue">Limpiar cola</string>
+    <string name="action_remove_from_queue">Quitar de la cola</string>
+    <string name="action_drag">Arrastrar para mover</string>
+    <string name="action_shuffle">Aleatorio</string>
+
+    <!-- Labels -->
+    <string name="label_songs">canciones</string>
+    <string name="label_albums">Álbumes</string>
+    <string name="label_queue">Cola de reproducción</string>
+    <string name="label_now_playing">Reproduciendo ahora</string>
+    <string name="label_playlist_name">Nombre de la playlist</string>
+
+    <!-- Modes -->
+    <string name="mode_loop">Repetir</string>
+    <string name="mode_list">En orden</string>
+    <string name="mode_shuffle">Aleatorio</string>
+
+    <!-- Empty states -->
+    <string name="empty_songs">No hay canciones.\nOtorga acceso al almacenamiento para ver tus archivos de música.</string>
+    <string name="empty_playlist">Esta playlist está vacía.</string>
+    <string name="empty_artists">No hay artistas.</string>
+    <string name="empty_albums">No hay álbumes.</string>
+    <string name="empty_queue">La cola está vacía.</string>
+    <string name="no_results">Sin resultados.</string>
+    <string name="no_playlists">No tienes playlists aún.</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_new_playlist">Nueva playlist</string>
+    <string name="dialog_add_to_playlist">Agregar a playlist</string>
+
+    <!-- Search -->
+    <string name="search_songs">Buscar canciones…</string>
+</resources>
