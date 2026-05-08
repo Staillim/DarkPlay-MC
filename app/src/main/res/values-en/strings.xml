@@ -8,7 +8,6 @@
     <string name="tab_playlists">Playlists</string>
     <string name="tab_artists">Artists</string>
     <string name="tab_albums">Albums</string>
-    <string name="tab_library">Library</string>
 
     <!-- Actions -->
     <string name="action_play">Play</string>
@@ -29,20 +28,15 @@
     <string name="action_show_queue">View queue</string>
     <string name="action_clear_queue">Clear queue</string>
     <string name="action_remove_from_queue">Remove from queue</string>
-    <string name="action_drag">Drag to reorder</string>
     <string name="action_shuffle">Shuffle</string>
 
     <!-- Labels -->
     <string name="label_songs">songs</string>
-    <string name="label_albums">Albums</string>
     <string name="label_queue">Play queue</string>
     <string name="label_now_playing">Now playing</string>
     <string name="label_playlist_name">Playlist name</string>
-
-    <!-- Modes -->
-    <string name="mode_loop">Repeat</string>
-    <string name="mode_list">In order</string>
-    <string name="mode_shuffle">Shuffle</string>
+    <string name="view_grid">Grid</string>
+    <string name="view_list">Rows</string>
 
     <!-- Empty states -->
     <string name="empty_songs">No songs found.\nGrant storage access to see your music files.</string>

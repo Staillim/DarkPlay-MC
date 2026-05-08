@@ -46,6 +46,7 @@ class PlayerViewModel @Inject constructor(
 
     // ─── MediaController state ───────────────────────────────────────────────
     private var controller: MediaController? = null
+    private var playbackSource: List<Song> = emptyList()
 
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong.asStateFlow()
@@ -230,7 +231,7 @@ class PlayerViewModel @Inject constructor(
         val c = controller ?: return
         _playbackMode.value = when {
             c.repeatMode == Player.REPEAT_MODE_ONE -> PlaybackMode.LOOP
-            c.shuffleModeEnabled -> PlaybackMode.SHUFFLE
+            _playbackMode.value == PlaybackMode.SHUFFLE -> PlaybackMode.SHUFFLE
             else -> PlaybackMode.LIST
         }
     }
@@ -239,11 +240,26 @@ class PlayerViewModel @Inject constructor(
 
     fun playSongs(songs: List<Song>, startIndex: Int = 0) {
         val c = controller ?: return
-        val items = songs.map { it.toMediaItem() }
-        c.setMediaItems(items, startIndex, androidx.media3.common.C.TIME_UNSET)
+        if (songs.isEmpty()) return
+
+        playbackSource = songs
+        val (orderedSongs, queueStartIndex) = buildPlaybackOrder(
+            source = songs,
+            startIndex = startIndex,
+            mode = _playbackMode.value
+        )
+
+        c.shuffleModeEnabled = false
+        c.setMediaItems(
+            orderedSongs.map { it.toMediaItem() },
+            queueStartIndex,
+            androidx.media3.common.C.TIME_UNSET
+        )
         c.prepare()
         c.play()
         updateQueue()
+        updateCurrentSong()
+        updateQueueIndex()
         _showFullPlayer.value = true
     }
 
@@ -264,6 +280,7 @@ class PlayerViewModel @Inject constructor(
 
     fun setPlaybackMode(mode: PlaybackMode) {
         val c = controller ?: return
+        _playbackMode.value = mode
         when (mode) {
             PlaybackMode.LOOP -> {
                 c.repeatMode = Player.REPEAT_MODE_ONE
@@ -272,13 +289,14 @@ class PlayerViewModel @Inject constructor(
             PlaybackMode.LIST -> {
                 c.repeatMode = Player.REPEAT_MODE_ALL
                 c.shuffleModeEnabled = false
+                restoreSourceOrder(c)
             }
             PlaybackMode.SHUFFLE -> {
                 c.repeatMode = Player.REPEAT_MODE_ALL
-                c.shuffleModeEnabled = true
+                c.shuffleModeEnabled = false
+                shuffleQueueFromCurrentSong(c)
             }
         }
-        _playbackMode.value = mode
     }
 
     // ─── Queue management ─────────────────────────────────────────────────────
@@ -288,7 +306,11 @@ class PlayerViewModel @Inject constructor(
      * ExoPlayer natively handles the currently-playing item being moved.
      */
     fun moveQueueItem(fromIndex: Int, toIndex: Int) {
-        controller?.moveMediaItem(fromIndex, toIndex)
+        val c = controller ?: return
+        if (fromIndex !in 0 until c.mediaItemCount || toIndex !in 0 until c.mediaItemCount) return
+        c.moveMediaItem(fromIndex, toIndex)
+        updateQueue()
+        playbackSource = _queue.value
     }
 
     /**
@@ -296,17 +318,26 @@ class PlayerViewModel @Inject constructor(
      * If it's the current item, ExoPlayer advances to the next one automatically.
      */
     fun removeFromQueue(index: Int) {
-        controller?.removeMediaItem(index)
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        c.removeMediaItem(index)
+        updateQueue()
+        playbackSource = _queue.value
     }
 
     fun addToQueueAtEnd(song: Song) {
-        controller?.addMediaItem(song.toMediaItem())
+        val c = controller ?: return
+        c.addMediaItem(song.toMediaItem())
+        updateQueue()
+        playbackSource = _queue.value
     }
 
     fun addToQueueNext(song: Song) {
         val c = controller ?: return
         val insertAt = (c.currentMediaItemIndex + 1).coerceAtMost(c.mediaItemCount)
         c.addMediaItem(insertAt, song.toMediaItem())
+        updateQueue()
+        playbackSource = _queue.value
     }
 
     // ─── Favorites ────────────────────────────────────────────────────────────
@@ -351,6 +382,54 @@ class PlayerViewModel @Inject constructor(
     override fun onCleared() {
         controller?.release()
         super.onCleared()
+    }
+
+    private fun buildPlaybackOrder(
+        source: List<Song>,
+        startIndex: Int,
+        mode: PlaybackMode
+    ): Pair<List<Song>, Int> {
+        if (source.isEmpty()) return emptyList<Song>() to 0
+        val safeStartIndex = startIndex.coerceIn(source.indices)
+        if (mode != PlaybackMode.SHUFFLE) return source to safeStartIndex
+
+        val currentSong = source[safeStartIndex]
+        val shuffledRest = source
+            .filterIndexed { index, _ -> index != safeStartIndex }
+            .shuffled()
+        return listOf(currentSong) + shuffledRest to 0
+    }
+
+    private fun restoreSourceOrder(c: MediaController) {
+        val source = playbackSource.ifEmpty { _queue.value }
+        if (source.isEmpty()) return
+        val currentId = c.currentMediaItem?.mediaId?.toLongOrNull()
+        val startIndex = source.indexOfFirst { it.id == currentId }.takeIf { it >= 0 } ?: 0
+        replaceQueueKeepingPosition(c, source, startIndex)
+    }
+
+    private fun shuffleQueueFromCurrentSong(c: MediaController) {
+        val source = playbackSource.ifEmpty { _queue.value }
+        if (source.isEmpty()) return
+        val currentId = c.currentMediaItem?.mediaId?.toLongOrNull()
+        val startIndex = source.indexOfFirst { it.id == currentId }.takeIf { it >= 0 } ?: 0
+        val (shuffledSongs, queueStartIndex) = buildPlaybackOrder(source, startIndex, PlaybackMode.SHUFFLE)
+        replaceQueueKeepingPosition(c, shuffledSongs, queueStartIndex)
+    }
+
+    private fun replaceQueueKeepingPosition(
+        c: MediaController,
+        songs: List<Song>,
+        startIndex: Int
+    ) {
+        val wasPlaying = c.isPlaying
+        val position = c.currentPosition.coerceAtLeast(0L)
+        c.setMediaItems(songs.map { it.toMediaItem() }, startIndex, position)
+        c.prepare()
+        if (wasPlaying) c.play()
+        updateQueue()
+        updateCurrentSong()
+        updateQueueIndex()
     }
 }
 

@@ -1,13 +1,12 @@
 package com.darkplaymc.app.presentation.player
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,13 +24,8 @@ import com.darkplaymc.app.R
 import com.darkplaymc.app.data.model.Song
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 import com.darkplaymc.app.ui.theme.AccentViolet
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QueueBottomSheet(
     vm: PlayerViewModel,
@@ -39,53 +33,15 @@ fun QueueBottomSheet(
 ) {
     val queue by vm.queue.collectAsState()
     val currentQueueIndex by vm.currentQueueIndex.collectAsState()
-
-    // Local copy for immediate visual feedback during drag
-    var localQueue by remember { mutableStateOf(queue) }
-    var isDraggingActive by remember { mutableStateOf(false) }
-    var dragFromIndex by remember { mutableStateOf(-1) }
-    var dragToIndex by remember { mutableStateOf(-1) }
-    var pendingCommitJob by remember { mutableStateOf<Job?>(null) }
-    val scope = rememberCoroutineScope()
-
-    // Sync from VM only when not actively dragging
-    LaunchedEffect(queue) {
-        if (!isDraggingActive) localQueue = queue
+    val initialIndex = remember(queue.size) {
+        currentQueueIndex.takeIf { it in queue.indices } ?: 0
     }
 
-    val lazyListState = rememberLazyListState()
-
-    // Auto-scroll to currently playing song when sheet opens
-    LaunchedEffect(Unit) {
-        if (currentQueueIndex >= 0) lazyListState.animateScrollToItem(currentQueueIndex)
-    }
-
-    val reorderableState = rememberReorderableLazyListState(
-        lazyListState = lazyListState,
-        onMove = { from, to ->
-            if (!isDraggingActive) {
-                isDraggingActive = true
-                dragFromIndex = from.index
-            }
-            dragToIndex = to.index
-            localQueue = localQueue.toMutableList().apply {
-                add(to.index, removeAt(from.index))
-            }
-            // Debounce: commit to ExoPlayer 300ms after last onMove
-            pendingCommitJob?.cancel()
-            pendingCommitJob = scope.launch {
-                delay(300)
-                vm.moveQueueItem(dragFromIndex, dragToIndex)
-                isDraggingActive = false
-                dragFromIndex = -1
-                dragToIndex = -1
-            }
-        }
-    )
+    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
@@ -109,7 +65,7 @@ fun QueueBottomSheet(
                 )
                 TextButton(onClick = {
                     // Remove all items except the currently playing one
-                    val size = localQueue.size
+                    val size = queue.size
                     for (i in size - 1 downTo 0) {
                         if (i != currentQueueIndex) vm.removeFromQueue(i)
                     }
@@ -120,7 +76,7 @@ fun QueueBottomSheet(
 
             HorizontalDivider()
 
-            if (localQueue.isEmpty()) {
+            if (queue.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                     contentAlignment = Alignment.Center
@@ -138,27 +94,16 @@ fun QueueBottomSheet(
                         .weight(1f)
                 ) {
                     itemsIndexed(
-                        items = localQueue,
-                    key = { _, song -> song.id }
+                        items = queue,
+                        key = { index, song -> "${song.id}-$index" },
+                        contentType = { _, _ -> "queue_song" }
                     ) { index, song ->
                         val isCurrentItem = index == currentQueueIndex
-                        ReorderableItem(
-                            state = reorderableState,
-                            key = song.id
-                        ) { isDragging ->
-                            val elevation by animateDpAsState(
-                                targetValue = if (isDragging) 8.dp else 0.dp,
-                                label = "drag_elevation"
-                            )
-                            QueueSongItem(
-                                song = song,
-                                isCurrentItem = isCurrentItem,
-                                isDragging = isDragging,
-                                elevation = elevation,
-                                onRemove = { vm.removeFromQueue(index) },
-                                dragHandleModifier = Modifier.draggableHandle()
-                            )
-                        }
+                        QueueSongItem(
+                            song = song,
+                            isCurrentItem = isCurrentItem,
+                            onRemove = { vm.removeFromQueue(index) }
+                        )
                     }
                 }
             }
@@ -170,14 +115,11 @@ fun QueueBottomSheet(
 private fun QueueSongItem(
     song: Song,
     isCurrentItem: Boolean,
-    isDragging: Boolean,
-    elevation: androidx.compose.ui.unit.Dp,
-    onRemove: () -> Unit,
-    dragHandleModifier: Modifier
+    onRemove: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        tonalElevation = elevation,
+        tonalElevation = 0.dp,
         color = if (isCurrentItem)
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         else
@@ -189,21 +131,12 @@ private fun QueueSongItem(
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Drag handle
-            Icon(
-                imageVector = Icons.Default.DragHandle,
-                contentDescription = stringResource(R.string.action_drag),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = dragHandleModifier.padding(end = 8.dp)
-            )
-
-            // Album art
             AsyncImage(
                 model = song.albumArtUri,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(43.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
@@ -229,7 +162,7 @@ private fun QueueSongItem(
             // "Now playing" badge
             if (isCurrentItem) {
                 Icon(
-                    imageVector = Icons.Default.VolumeUp,
+                    imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = null,
                     tint = AccentViolet,
                     modifier = Modifier.size(16.dp).padding(end = 4.dp)

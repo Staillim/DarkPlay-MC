@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,12 +24,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.darkplaymc.app.R
 import com.darkplaymc.app.data.model.Playlist
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 
@@ -62,7 +66,7 @@ fun PlaylistsScreen(vm: PlayerViewModel, navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${allPlaylists.size} playlists",
+                    text = "${allPlaylists.size} ${stringResource(R.string.tab_playlists)}",
                     fontSize = 13.sp,
                     color = Color.White.copy(alpha = 0.5f),
                     modifier = Modifier.weight(1f)
@@ -73,13 +77,13 @@ fun PlaylistsScreen(vm: PlayerViewModel, navController: NavController) {
                 ) {
                     ViewToggleBtn(
                         icon = Icons.Default.GridView,
-                        label = "Cuadros",
+                        label = stringResource(R.string.view_grid),
                         selected = viewMode == PlaylistViewMode.GRID,
                         onClick = { viewMode = PlaylistViewMode.GRID }
                     )
                     ViewToggleBtn(
-                        icon = Icons.Default.ViewList,
-                        label = "Filas",
+                        icon = Icons.AutoMirrored.Filled.ViewList,
+                        label = stringResource(R.string.view_list),
                         selected = viewMode == PlaylistViewMode.LIST,
                         onClick = { viewMode = PlaylistViewMode.LIST }
                     )
@@ -132,7 +136,7 @@ fun PlaylistsScreen(vm: PlayerViewModel, navController: NavController) {
             containerColor = Color.White,
             contentColor = Color.Black
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Nueva playlist")
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_new_playlist))
         }
 
         // Bottom gradient fade
@@ -221,7 +225,7 @@ private fun PlaylistGridCard(
                     modifier = Modifier.fillMaxSize()
                 )
                 else -> Icon(
-                    Icons.Default.QueueMusic,
+                    Icons.AutoMirrored.Filled.QueueMusic,
                     contentDescription = null,
                     tint = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier.size(42.dp)
@@ -259,7 +263,7 @@ private fun PlaylistGridCard(
                     }
                     DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                         DropdownMenuItem(
-                            text = { Text("Eliminar") },
+                            text = { Text(stringResource(R.string.action_delete)) },
                             leadingIcon = { Icon(Icons.Default.Delete, null) },
                             onClick = { onDelete(); showMenu = false }
                         )
@@ -280,7 +284,7 @@ private fun PlaylistGridCard(
             modifier = Modifier.padding(horizontal = 2.dp)
         )
         Text(
-            text = "${playlist.songCount} canciones",
+            text = "${playlist.songCount} ${stringResource(R.string.label_songs)}",
             fontSize = 12.sp,
             letterSpacing = (-0.1f).sp,
             color = Color.White.copy(alpha = 0.5f),
@@ -335,7 +339,7 @@ private fun PlaylistListRow(
                     modifier = Modifier.fillMaxSize()
                 )
                 else -> Icon(
-                    Icons.Default.QueueMusic,
+                    Icons.AutoMirrored.Filled.QueueMusic,
                     contentDescription = null,
                     tint = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier.size(26.dp)
@@ -354,7 +358,7 @@ private fun PlaylistListRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "${playlist.songCount} canciones",
+                text = "${playlist.songCount} ${stringResource(R.string.label_songs)}",
                 fontSize = 13.sp,
                 color = Color.White.copy(alpha = 0.5f)
             )
@@ -372,7 +376,7 @@ private fun PlaylistListRow(
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(
-                        text = { Text("Eliminar") },
+                        text = { Text(stringResource(R.string.action_delete)) },
                         leadingIcon = { Icon(Icons.Default.Delete, null) },
                         onClick = { onDelete(); showMenu = false }
                     )
@@ -396,12 +400,12 @@ fun CreatePlaylistDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Playlist") },
+        title = { Text(stringResource(R.string.dialog_new_playlist)) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nombre") },
+                label = { Text(stringResource(R.string.label_playlist_name)) },
                 singleLine = true
             )
         },
@@ -409,8 +413,8 @@ fun CreatePlaylistDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
             TextButton(
                 onClick = { if (name.isNotBlank()) onConfirm(name.trim()) },
                 enabled = name.isNotBlank()
-            ) { Text("Crear") }
+            ) { Text(stringResource(R.string.action_create)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }

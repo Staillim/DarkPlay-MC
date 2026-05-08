@@ -1,18 +1,27 @@
 package com.darkplaymc.app.presentation.artists
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.darkplaymc.app.R
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
@@ -36,7 +45,7 @@ fun ArtistDetailScreen(
                 title = { Text(artistName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
                 actions = {
@@ -65,46 +74,6 @@ fun ArtistDetailScreen(
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // Albums section header
-            if (artist.albums.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.label_albums),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = AccentViolet,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-                artist.albums.forEach { album ->
-                    item(key = "album_${album.id}") {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AsyncImage(
-                                model = album.coverUri,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(album.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(
-                                    "${album.songCount} ${stringResource(R.string.label_songs)}${if (album.year > 0) " • ${album.year}" else ""}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            IconButton(onClick = { vm.playSongs(album.songs, 0) }) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = AccentViolet)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Songs section header
             item {
                 Text(
                     text = stringResource(R.string.label_songs),
@@ -115,26 +84,65 @@ fun ArtistDetailScreen(
             }
 
             itemsIndexed(artist.songs, key = { _, s -> s.id }) { index, song ->
+                val isPlaying = song.id == currentSong?.id
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { vm.playSongs(artist.songs, index) }
+                        .background(
+                            if (isPlaying) Color.White.copy(alpha = 0.05f)
+                            else Color.Transparent
+                        )
+                        .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = song.title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (song.id == currentSong?.id) AccentViolet else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = song.album,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(0.8f)
-                    )
-                    IconButton(onClick = { vm.playSongs(artist.songs, index) }) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = AccentViolet)
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(Color(0xFF1C1C1E)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AsyncImage(
+                            model = song.albumArtUri,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        if (isPlaying) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.45f))
+                            )
+                            Icon(
+                                Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = song.title,
+                            fontSize = 15.sp,
+                            fontWeight = if (isPlaying) FontWeight.SemiBold else FontWeight.Normal,
+                            letterSpacing = (-0.2f).sp,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = song.artist,
+                            fontSize = 13.sp,
+                            letterSpacing = (-0.1f).sp,
+                            color = Color.White.copy(alpha = 0.5f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)

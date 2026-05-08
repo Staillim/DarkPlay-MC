@@ -1,17 +1,23 @@
 package com.darkplaymc.app.presentation.artists
 
+import android.net.Uri
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,10 +35,13 @@ import com.darkplaymc.app.R
 import com.darkplaymc.app.data.model.Artist
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 
+private enum class ArtistViewMode { GRID, LIST }
+
 @Composable
 fun ArtistsScreen(vm: PlayerViewModel, navController: NavController) {
     val artists by vm.artists.collectAsState()
     val sorted = remember(artists) { artists.sortedByDescending { it.songCount } }
+    var viewMode by rememberSaveable { mutableStateOf(ArtistViewMode.GRID) }
 
     if (sorted.isEmpty()) {
         Box(
@@ -47,19 +56,96 @@ fun ArtistsScreen(vm: PlayerViewModel, navController: NavController) {
         return
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 100.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier.fillMaxSize().background(Color.Black)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
     ) {
-        items(sorted, key = { it.name }) { artist ->
-            ArtistCard(
-                artist = artist,
-                onClick = { navController.navigate("artist/${artist.name}") }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${sorted.size} ${stringResource(R.string.tab_artists)}",
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.5f),
+                modifier = Modifier.weight(1f)
             )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ViewToggleBtn(
+                    icon = Icons.Default.GridView,
+                    label = stringResource(R.string.view_grid),
+                    selected = viewMode == ArtistViewMode.GRID,
+                    onClick = { viewMode = ArtistViewMode.GRID }
+                )
+                ViewToggleBtn(
+                    icon = Icons.AutoMirrored.Filled.ViewList,
+                    label = stringResource(R.string.view_list),
+                    selected = viewMode == ArtistViewMode.LIST,
+                    onClick = { viewMode = ArtistViewMode.LIST }
+                )
+            }
         }
+
+        if (viewMode == ArtistViewMode.GRID) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(sorted, key = { it.name }) { artist ->
+                    ArtistCard(
+                        artist = artist,
+                        onClick = { navController.navigate("artist/${Uri.encode(artist.name)}") }
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = 100.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(sorted, key = { it.name }) { artist ->
+                    ArtistListRow(
+                        artist = artist,
+                        onClick = { navController.navigate("artist/${Uri.encode(artist.name)}") }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ViewToggleBtn(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .background(
+                if (selected) Color.White.copy(alpha = 0.15f) else Color.Transparent,
+                RoundedCornerShape(8.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = if (selected) Color.White else Color.White.copy(alpha = 0.35f),
+            modifier = Modifier.size(17.dp)
+        )
     }
 }
 
@@ -129,6 +215,68 @@ private fun ArtistCard(artist: Artist, onClick: () -> Unit) {
             letterSpacing = (-0.1f).sp,
             color = Color.White.copy(alpha = 0.5f),
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ArtistListRow(artist: Artist, onClick: () -> Unit) {
+    val coverUri = remember(artist) { artist.songs.firstOrNull { it.albumArtUri != null }?.albumArtUri }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF2C2C2E)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (coverUri != null) {
+                AsyncImage(
+                    model = coverUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.3f),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = artist.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.2f).sp,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${artist.songCount} ${stringResource(R.string.label_songs)}",
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.5f)
+            )
+        }
+
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = Color.White.copy(alpha = 0.3f),
+            modifier = Modifier.size(20.dp)
         )
     }
 }

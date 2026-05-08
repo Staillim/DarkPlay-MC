@@ -3,7 +3,6 @@ package com.darkplaymc.app
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.os.Build
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
@@ -14,16 +13,14 @@ import dagger.hilt.android.HiltAndroidApp
 class DarkPlayApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "new_songs",
-                "Nuevas canciones",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Notifica cuando se agregan canciones nuevas al dispositivo"
-            }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            "new_songs",
+            "Nuevas canciones",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Notifica cuando se agregan canciones nuevas al dispositivo"
         }
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
     override fun newImageLoader(): ImageLoader {

@@ -13,6 +13,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -26,17 +29,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.darkplaymc.app.R
 import com.darkplaymc.app.data.model.Album
 import com.darkplaymc.app.data.model.Artist
 import com.darkplaymc.app.data.model.Playlist
 import com.darkplaymc.app.data.model.Song
-import com.darkplaymc.app.data.model.formattedDuration
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 
 private enum class PlaylistViewMode { GRID, LIST }
@@ -86,7 +90,7 @@ fun LibraryScreen(vm: PlayerViewModel, navController: NavController) {
 
             // ── CANCIONES SECTION ──────────────────────────────────────────────
             item(key = "sec_songs") {
-                LibrarySectionHeader(title = "Canciones")
+                LibrarySectionHeader(title = stringResource(R.string.tab_songs))
             }
 
             itemsIndexed(
@@ -111,20 +115,20 @@ fun LibraryScreen(vm: PlayerViewModel, navController: NavController) {
 
             // ── PLAYLISTS SECTION ──────────────────────────────────────────────
             item {
-                LibrarySectionHeader(title = "Playlists") {
+                LibrarySectionHeader(title = stringResource(R.string.tab_playlists)) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         ViewModeToggleButton(
                             icon = Icons.Default.GridView,
-                            label = "Cuadros",
+                            label = stringResource(R.string.view_grid),
                             selected = playlistViewMode == PlaylistViewMode.GRID,
                             onClick = { playlistViewMode = PlaylistViewMode.GRID }
                         )
                         ViewModeToggleButton(
-                            icon = Icons.Default.ViewList,
-                            label = "Filas",
+                            icon = Icons.AutoMirrored.Filled.ViewList,
+                            label = stringResource(R.string.view_list),
                             selected = playlistViewMode == PlaylistViewMode.LIST,
                             onClick = { playlistViewMode = PlaylistViewMode.LIST }
                         )
@@ -138,7 +142,7 @@ fun LibraryScreen(vm: PlayerViewModel, navController: NavController) {
                         ) {
                             Icon(
                                 Icons.Default.Add,
-                                contentDescription = "Nueva playlist",
+                                contentDescription = stringResource(R.string.action_new_playlist),
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -180,7 +184,7 @@ fun LibraryScreen(vm: PlayerViewModel, navController: NavController) {
             item { Spacer(Modifier.height(32.dp)) }
 
             // ── ÁLBUMES SECTION ────────────────────────────────────────────────
-            item(key = "sec_albums") { LibrarySectionHeader(title = "Álbumes") }
+            item(key = "sec_albums") { LibrarySectionHeader(title = stringResource(R.string.tab_albums)) }
 
             val albumRows = sortedAlbums.chunked(2)
             items(albumRows, key = { row -> "albrow_${row.first().id}" }) { row ->
@@ -204,7 +208,7 @@ fun LibraryScreen(vm: PlayerViewModel, navController: NavController) {
             item { Spacer(Modifier.height(32.dp)) }
 
             // ── ARTISTAS SECTION ───────────────────────────────────────────────
-            item(key = "sec_artists") { LibrarySectionHeader(title = "Artistas") }
+            item(key = "sec_artists") { LibrarySectionHeader(title = stringResource(R.string.tab_artists)) }
 
             val artistRows = sortedArtists.chunked(2)
             items(artistRows, key = { row -> "arow_${row.first().name}" }) { row ->
@@ -218,7 +222,7 @@ fun LibraryScreen(vm: PlayerViewModel, navController: NavController) {
                         ArtistCard(
                             artist = artist,
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("artist/${artist.name}") }
+                            onClick = { navController.navigate("artist/${Uri.encode(artist.name)}") }
                         )
                     }
                     if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -286,7 +290,7 @@ private fun LibrarySongRow(
         // Square album art thumbnail
         Box(
             modifier = Modifier
-                .size(46.dp)
+                .size(55.dp)
                 .shadow(4.dp, RoundedCornerShape(7.dp), spotColor = Color.Black)
                 .clip(RoundedCornerShape(7.dp))
                 .background(Color(0xFF1C1C1E)),
@@ -305,7 +309,7 @@ private fun LibrarySongRow(
                         .background(Color.Black.copy(alpha = 0.45f))
                 )
                 Icon(
-                    Icons.Default.VolumeUp,
+                    Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
@@ -326,7 +330,7 @@ private fun LibrarySongRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "${song.artist} · ${song.formattedDuration()}",
+                text = song.artist,
                 fontSize = 13.sp,
                 letterSpacing = (-0.1f).sp,
                 color = Color.White.copy(alpha = 0.5f),
@@ -438,7 +442,7 @@ private fun PlaylistGridCard(
                     modifier = Modifier.fillMaxSize()
                 )
                 else -> Icon(
-                    Icons.Default.QueueMusic,
+                    Icons.AutoMirrored.Filled.QueueMusic,
                     contentDescription = null,
                     tint = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier.size(42.dp)
@@ -483,7 +487,7 @@ private fun PlaylistGridCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Eliminar") },
+                            text = { Text(stringResource(R.string.action_delete)) },
                             leadingIcon = { Icon(Icons.Default.Delete, null) },
                             onClick = { onDelete(); showMenu = false }
                         )
@@ -504,7 +508,7 @@ private fun PlaylistGridCard(
             modifier = Modifier.padding(horizontal = 2.dp)
         )
         Text(
-            text = "${playlist.songCount} canciones",
+            text = "${playlist.songCount} ${stringResource(R.string.label_songs)}",
             fontSize = 12.sp,
             letterSpacing = (-0.1f).sp,
             color = Color.White.copy(alpha = 0.5f),
@@ -561,7 +565,7 @@ private fun PlaylistListRow(
                     modifier = Modifier.fillMaxSize()
                 )
                 else -> Icon(
-                    Icons.Default.QueueMusic,
+                    Icons.AutoMirrored.Filled.QueueMusic,
                     contentDescription = null,
                     tint = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier.size(26.dp)
@@ -580,7 +584,7 @@ private fun PlaylistListRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "${playlist.songCount} canciones",
+                text = "${playlist.songCount} ${stringResource(R.string.label_songs)}",
                 fontSize = 13.sp,
                 letterSpacing = (-0.1f).sp,
                 color = Color.White.copy(alpha = 0.5f)
@@ -605,7 +609,7 @@ private fun PlaylistListRow(
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Eliminar") },
+                        text = { Text(stringResource(R.string.action_delete)) },
                         leadingIcon = { Icon(Icons.Default.Delete, null) },
                         onClick = { onDelete(); showMenu = false }
                     )
@@ -693,7 +697,7 @@ private fun ArtistCard(
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = "${artist.songCount} canciones",
+            text = "${artist.songCount} ${stringResource(R.string.label_songs)}",
             fontSize = 12.sp,
             color = Color.White.copy(alpha = 0.5f)
         )
@@ -843,12 +847,12 @@ private fun CreatePlaylistDialog(
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Playlist") },
+        title = { Text(stringResource(R.string.dialog_new_playlist)) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nombre") },
+                label = { Text(stringResource(R.string.label_playlist_name)) },
                 singleLine = true
             )
         },
@@ -856,10 +860,10 @@ private fun CreatePlaylistDialog(
             TextButton(
                 onClick = { if (name.isNotBlank()) onConfirm(name.trim()) },
                 enabled = name.isNotBlank()
-            ) { Text("Crear") }
+            ) { Text(stringResource(R.string.action_create)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

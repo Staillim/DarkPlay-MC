@@ -2,6 +2,7 @@ package com.darkplaymc.app.presentation.main
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -95,7 +96,7 @@ class MainActivity : ComponentActivity() {
 
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
-                        sheetPeekHeight = if (currentSong != null) 64.dp else 0.dp,
+                        sheetPeekHeight = if (currentSong != null) 88.dp else 0.dp,
                         sheetDragHandle = null,
                         sheetContent = {
                             Box(modifier = Modifier.fillMaxHeight()) {
@@ -128,7 +129,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 composable("artist/{name}") { back ->
-                                    val name = back.arguments?.getString("name") ?: ""
+                                    val name = Uri.decode(back.arguments?.getString("name") ?: "")
                                     ArtistDetailScreen(
                                         artistName = name,
                                         vm = vm,

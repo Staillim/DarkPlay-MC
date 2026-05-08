@@ -3,11 +3,11 @@ package com.darkplaymc.app.data.repository
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
-import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import androidx.core.net.toUri
 import com.darkplaymc.app.data.model.Album
 import com.darkplaymc.app.data.model.Artist
 import com.darkplaymc.app.data.model.Song
@@ -80,7 +80,7 @@ class MediaStoreRepository @Inject constructor(
                     val id = cursor.getLong(idCol)
                     val albumId = cursor.getLong(albumIdCol)
                     val albumArtUri = ContentUris.withAppendedId(
-                        Uri.parse("content://media/external/audio/albumart"), albumId
+                        "content://media/external/audio/albumart".toUri(), albumId
                     )
                     songs.add(
                         Song(

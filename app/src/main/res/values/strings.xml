@@ -8,7 +8,6 @@
     <string name="tab_playlists">Playlists</string>
     <string name="tab_artists">Artistas</string>
     <string name="tab_albums">Álbumes</string>
-    <string name="tab_library">Biblioteca</string>
 
     <!-- Actions -->
     <string name="action_play">Reproducir</string>
@@ -29,20 +28,15 @@
     <string name="action_show_queue">Ver cola</string>
     <string name="action_clear_queue">Limpiar cola</string>
     <string name="action_remove_from_queue">Quitar de la cola</string>
-    <string name="action_drag">Arrastrar para mover</string>
     <string name="action_shuffle">Aleatorio</string>
 
     <!-- Labels -->
     <string name="label_songs">canciones</string>
-    <string name="label_albums">Álbumes</string>
     <string name="label_queue">Cola de reproducción</string>
     <string name="label_now_playing">Reproduciendo ahora</string>
     <string name="label_playlist_name">Nombre de la playlist</string>
-
-    <!-- Modes -->
-    <string name="mode_loop">Repetir</string>
-    <string name="mode_list">En orden</string>
-    <string name="mode_shuffle">Aleatorio</string>
+    <string name="view_grid">Cuadros</string>
+    <string name="view_list">Filas</string>
 
     <!-- Empty states -->
     <string name="empty_songs">No hay canciones.\nOtorga acceso al almacenamiento para ver tus archivos de música.</string>

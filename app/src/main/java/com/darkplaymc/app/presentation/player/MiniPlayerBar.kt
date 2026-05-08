@@ -1,9 +1,9 @@
 package com.darkplaymc.app.presentation.player
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,8 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,77 +32,71 @@ fun MiniPlayerBar(vm: PlayerViewModel) {
     val song        by vm.currentSong.collectAsState()
     val isPlaying   by vm.isPlaying.collectAsState()
     val progress    by vm.progress.collectAsState()
-    val favoriteIds by vm.favoriteIds.collectAsState()
 
-    song ?: return
-
-    val isFavorite = song?.id?.let { favoriteIds.contains(it) } ?: false
+    val currentSong = song ?: return
+    val artworkBackground = rememberArtworkBackgroundColor(currentSong.albumArtUri)
+    val animatedBackground by animateColorAsState(
+        targetValue = artworkBackground,
+        animationSpec = tween(durationMillis = 700),
+        label = "miniPlayerBackground"
+    )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1C1C1E))
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        animatedBackground.copy(alpha = 0.92f),
+                        animatedBackground.copy(alpha = 0.72f),
+                        Color.Black
+                    )
+                )
+            )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        var totalDrag = 0f
-                        var tapped = true
-                        drag(down.id) { change ->
-                            totalDrag += change.position.y - change.previousPosition.y
-                            tapped = false
-                        }
-                        if (tapped || totalDrag < -80f) vm.openFullPlayer()
-                    }
-                }
+                .height(80.dp)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Square rounded album art — iOS style
-            AsyncImage(
-                model = song?.albumArtUri,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            Row(
                 modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF2C2C2E))
-            )
-
-            Spacer(Modifier.width(14.dp))
-
-            // Title + artist
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = song?.title ?: "",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-0.2f).sp,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = song?.artist ?: "",
-                    fontSize = 13.sp,
-                    color = Color.White.copy(alpha = 0.5f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // Heart / Favorite
-            IconButton(onClick = { song?.id?.let { vm.toggleFavorite(it) } }) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    .weight(1f)
+                    .clickable { vm.openFullPlayer() },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AsyncImage(
+                    model = currentSong.albumArtUri,
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(55.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF2C2C2E))
                 )
+
+                Spacer(Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = currentSong.title,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.2f).sp,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = currentSong.artist,
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.5f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             // Play / Pause
@@ -113,6 +107,15 @@ fun MiniPlayerBar(vm: PlayerViewModel) {
                         stringResource(R.string.action_pause)
                     else
                         stringResource(R.string.action_play),
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            IconButton(onClick = { vm.next() }) {
+                Icon(
+                    imageVector = Icons.Default.SkipNext,
+                    contentDescription = stringResource(R.string.action_next),
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )

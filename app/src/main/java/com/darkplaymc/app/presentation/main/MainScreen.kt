@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -31,6 +33,7 @@ import com.darkplaymc.app.R
 import com.darkplaymc.app.presentation.albums.AlbumsScreen
 import com.darkplaymc.app.presentation.artists.ArtistsScreen
 import com.darkplaymc.app.presentation.playlists.PlaylistsScreen
+import com.darkplaymc.app.presentation.songs.SongSortMode
 import com.darkplaymc.app.presentation.songs.SongsScreen
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
@@ -51,12 +54,15 @@ fun MainScreen(vm: PlayerViewModel, navController: NavController) {
 
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var songSortMode by remember { mutableStateOf(SongSortMode.RECENT) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     // Clear search when navigating away from songs tab
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage != 0) {
             showSearch = false
             searchQuery = ""
+            showSortMenu = false
         }
     }
 
@@ -100,6 +106,38 @@ fun MainScreen(vm: PlayerViewModel, navController: NavController) {
                                     contentDescription = null,
                                     tint = if (showSearch) Color.White else MaterialTheme.colorScheme.onSurface
                                 )
+                            }
+                            Box {
+                                IconButton(onClick = { showSortMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Sort,
+                                        contentDescription = stringResource(R.string.action_sort),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismissRequest = { showSortMenu = false }
+                                ) {
+                                    SongSortMode.entries.forEach { mode ->
+                                        DropdownMenuItem(
+                                            text = { Text(mode.label) },
+                                            onClick = {
+                                                songSortMode = mode
+                                                showSortMenu = false
+                                            },
+                                            leadingIcon = {
+                                                if (songSortMode == mode) {
+                                                    Icon(
+                                                        Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = Color.White
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
                     },
@@ -157,7 +195,12 @@ fun MainScreen(vm: PlayerViewModel, navController: NavController) {
                 .padding(paddingValues)
         ) { page ->
             when (page) {
-                0 -> SongsScreen(vm = vm, navController = navController, searchQuery = searchQuery)
+                0 -> SongsScreen(
+                    vm = vm,
+                    navController = navController,
+                    searchQuery = searchQuery,
+                    sortMode = songSortMode
+                )
                 1 -> PlaylistsScreen(vm = vm, navController = navController)
                 2 -> ArtistsScreen(vm = vm, navController = navController)
                 3 -> AlbumsScreen(vm = vm, navController = navController)

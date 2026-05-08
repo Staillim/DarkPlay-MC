@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,7 +27,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.darkplaymc.app.R
 import com.darkplaymc.app.data.model.Song
-import com.darkplaymc.app.data.model.formattedDuration
 import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,15 +34,13 @@ import com.darkplaymc.app.presentation.viewmodel.PlayerViewModel
 fun SongsScreen(
     vm: PlayerViewModel,
     navController: NavController,
-    searchQuery: String = ""
+    searchQuery: String = "",
+    sortMode: SongSortMode = SongSortMode.RECENT
 ) {
     val allSongs by vm.allSongs.collectAsState()
     val currentSong by vm.currentSong.collectAsState()
     val playlists by vm.playlists.collectAsState()
     val favoriteIds by vm.favoriteIds.collectAsState()
-
-    var sortMode by remember { mutableStateOf(SortMode.RECENT) }
-    var showSortMenu by remember { mutableStateOf(false) }
 
     val displayedSongs = remember(allSongs, searchQuery, sortMode) {
         val filtered = if (searchQuery.isBlank()) allSongs
@@ -50,45 +49,14 @@ fun SongsScreen(
                 it.artist.contains(searchQuery, ignoreCase = true)
         }
         when (sortMode) {
-            SortMode.RECENT -> filtered.sortedByDescending { it.dateAdded }
-            SortMode.TITLE  -> filtered.sortedBy { it.title }
-            SortMode.ARTIST -> filtered.sortedBy { it.artist }
-            SortMode.ALBUM  -> filtered.sortedBy { it.album }
+            SongSortMode.RECENT -> filtered.sortedByDescending { it.dateAdded }
+            SongSortMode.TITLE  -> filtered.sortedBy { it.title }
+            SongSortMode.ARTIST -> filtered.sortedBy { it.artist }
+            SongSortMode.ALBUM  -> filtered.sortedBy { it.album }
         }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "${displayedSongs.size} ${stringResource(R.string.label_songs)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Box {
-                IconButton(onClick = { showSortMenu = true }) {
-                    Icon(Icons.Default.Sort, contentDescription = stringResource(R.string.action_sort))
-                }
-                DropdownMenu(expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
-                    SortMode.entries.forEach { mode ->
-                        DropdownMenuItem(
-                            text = { Text(mode.label) },
-                            onClick = { sortMode = mode; showSortMenu = false },
-                            leadingIcon = {
-                                if (sortMode == mode)
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
         if (displayedSongs.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
@@ -159,7 +127,7 @@ private fun SongItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(58.dp)
                     .clip(RoundedCornerShape(7.dp))
                     .background(Color(0xFF1C1C1E)),
                 contentAlignment = Alignment.Center
@@ -177,7 +145,7 @@ private fun SongItem(
                             .background(Color.Black.copy(alpha = 0.45f))
                     )
                     Icon(
-                        Icons.Default.VolumeUp,
+                        Icons.AutoMirrored.Filled.VolumeUp,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
@@ -196,8 +164,8 @@ private fun SongItem(
                     color = Color.White,
                     maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = "${song.artist} · ${song.formattedDuration()}",
+            Text(
+                    text = song.artist,
                     fontSize = 13.sp,
                     letterSpacing = (-0.1f).sp,
                     color = Color.White.copy(alpha = 0.5f),
@@ -235,7 +203,7 @@ private fun SongItem(
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.action_add_to_playlist)) },
-                leadingIcon = { Icon(Icons.Default.PlaylistAdd, null) },
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
                 onClick = { showAddToPlaylist = true; showMenu = false }
             )
         }
@@ -283,7 +251,7 @@ fun AddToPlaylistDialog(
     )
 }
 
-private enum class SortMode(val label: String) {
+enum class SongSortMode(val label: String) {
     RECENT("Recientes"),
     TITLE("Titulo"),
     ARTIST("Artista"),

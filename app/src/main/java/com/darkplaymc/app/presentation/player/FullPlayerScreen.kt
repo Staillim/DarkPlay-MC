@@ -1,14 +1,20 @@
 package com.darkplaymc.app.presentation.player
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,7 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -42,15 +50,49 @@ fun FullPlayerScreen(vm: PlayerViewModel) {
     val playbackMode by vm.playbackMode.collectAsState()
 
     var showQueue  by remember { mutableStateOf(false) }
-    var swipeDelta by remember { mutableFloatStateOf(0f) }
 
     val isFavorite  = song?.id?.let { favoriteIds.contains(it) } ?: false
     val isShuffling = playbackMode == PlaybackMode.SHUFFLE
+    val coverMotion = rememberInfiniteTransition(label = "coverMotion")
+    val coverSway by coverMotion.animateFloat(
+        initialValue = -2.5f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2_800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "coverSway"
+    )
+    val coverPulse by coverMotion.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.035f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1_000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "coverPulse"
+    )
+    val animatedRotation = if (isPlaying) coverSway else 0f
+    val animatedScale = if (isPlaying) coverPulse else 1f
+    val artworkBackground = rememberArtworkBackgroundColor(song?.albumArtUri)
+    val animatedBackground by animateColorAsState(
+        targetValue = artworkBackground,
+        animationSpec = tween(durationMillis = 700),
+        label = "playerBackground"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        animatedBackground.copy(alpha = 0.96f),
+                        animatedBackground.copy(alpha = 0.78f),
+                        Color.Black
+                    )
+                )
+            )
     ) {
         Column(
             modifier = Modifier
@@ -91,7 +133,7 @@ fun FullPlayerScreen(vm: PlayerViewModel) {
                 )
                 IconButton(onClick = { showQueue = true }) {
                     Icon(
-                        Icons.Default.QueueMusic,
+                        Icons.AutoMirrored.Filled.QueueMusic,
                         contentDescription = stringResource(R.string.action_show_queue),
                         tint = Color.White.copy(alpha = 0.7f),
                         modifier = Modifier.size(22.dp)
@@ -106,6 +148,11 @@ fun FullPlayerScreen(vm: PlayerViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
+                    .graphicsLayer {
+                        rotationZ = animatedRotation
+                        scaleX = animatedScale
+                        scaleY = animatedScale
+                    }
                     .shadow(elevation = 40.dp, shape = RoundedCornerShape(16.dp), spotColor = Color.Black)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFF1C1C1E)),
@@ -251,7 +298,8 @@ fun FullPlayerScreen(vm: PlayerViewModel) {
                     modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
-                        Icons.Default.Shuffle, null,
+                        Icons.Default.Shuffle,
+                        contentDescription = stringResource(R.string.action_shuffle),
                         tint = if (isShuffling) Color.White else Color.White.copy(alpha = 0.3f),
                         modifier = Modifier.size(22.dp)
                     )
